@@ -1,113 +1,199 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import React, { useState, useEffect } from "react";
+import Head from "next/head";
+import axios from "axios";
+
+const Home = () => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [topPlayersData, setTopPlayersData] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState("bullet");
+  const [livestreams, setLivestreams] = useState([]);
+
+  useEffect(() => {
+    // Fetch top players data from the API when the component mounts
+    const fetchTopPlayers = async () => {
+      try {
+        const response = await axios.get("https://lichess.org/api/player");
+        setTopPlayersData(response.data[selectedCategory].slice(0, 10));
+      } catch (error) {
+        console.error("Error fetching top players data:", error.message);
+      }
+    };
+
+    fetchTopPlayers();
+  }, [selectedCategory]);
+
+  useEffect(() => {
+    const fetchLivestreams = async () => {
+      try {
+        const response = await axios.get(
+          "https://lichess.org/api/streamer/live"
+        );
+        console.log(response.data);
+        setLivestreams(response.data);
+      } catch (error) {
+        console.error("Error fetching livestream data:", error.message);
+      }
+    };
+
+    fetchLivestreams();
+  }, []);
+
+  const handleSearch = () => {
+    const filteredPlayers = topPlayersData.filter((player) =>
+      player.username.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setSearchResults(filteredPlayers);
+  };
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
+    <div>
+      <Head>
+        <title>Lichess Player Tracker</title>
+        <meta name="description" content="Track top players on Lichess" />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
+
+      <main className="flex min-h-screen flex-col items-center justify-between p-24">
+        <h1 className="text-3xl mb-4">Lichess Player Tracker</h1>
+
+        {/* Search Players */}
+        <section>
+          <h2 className="text-xl mb-2">Search Players</h2>
+          <div className="mb-4">
+            <input
+              type="text"
+              className="border p-2 text-black"
+              placeholder="Search for a player..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
-          </a>
-        </div>
-      </div>
+            <button
+              className="bg-blue-500 text-white p-2 ml-2"
+              onClick={handleSearch}
+            >
+              Search
+            </button>
+          </div>
+          <ul>
+            {searchResults.map((player, index) => (
+              <li key={index} className="mb-2">
+                <div>Name: {player.id}</div>
+                <div>Name: {player.username}</div>
+                <div>
+                  Progress:{" "}
+                  {player.perfs[selectedCategory]
+                    ? player.perfs[selectedCategory].progress
+                    : ""}
+                </div>
+                <div>
+                  Rating:{" "}
+                  {player.perfs[selectedCategory]
+                    ? player.perfs[selectedCategory].rating
+                    : ""}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
 
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-full sm:before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full sm:after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
+        {/* Option Bar to Choose Category */}
 
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
+        <section>
+          <h2 className="text-xl mt-8 mb-2">Choose Category</h2>
+          <select
+            className="border p-2 text-black"
+            value={selectedCategory}
+            onChange={(e) => {
+              console.log(e.target.value);
+              setSelectedCategory(e.target.value);
+            }}
+          >
+            <option value="bullet">Bullet</option>
+            <option value="blitz">Blitz</option>
+            <option value="rapid">Rapid</option>
+            <option value="classical">Classical</option>
+            <option value="ultraBullet">Ultra Bullet</option>
+            <option value="chess960">Chess960</option>
+            <option value="crazyhouse">Crazy House</option>
+            <option value="antichess">Antichess</option>
+            <option value="atomic">Atomic</option>
+            <option value="horde">Horde</option>
+            <option value="kingOfTheHill">King Of The Hill</option>
+            <option value="racingKings">Racing Kings</option>
+            <option value="threeCheck">Three Check</option>
+            {/* Add other categories here */}
+          </select>
+        </section>
 
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
+        {/* Top 10 Players */}
+        <section>
+          <h2 className="text-xl mt-8 mb-2">Top 10 Players</h2>
+          <ul>
+            {topPlayersData.map((player, index) => (
+              <li key={index} className="mb-2">
+                <div>Name: {player.id}</div>
+                <div>Name: {player.username}</div>
 
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Explore starter templates for Next.js.
-          </p>
-        </a>
+                <div>
+                  Progress:{" "}
+                  {player.perfs[selectedCategory]
+                    ? player.perfs[selectedCategory].progress
+                    : ""}
+                </div>
+                <div>
+                  Rating:{" "}
+                  {player.perfs[selectedCategory]
+                    ? player.perfs[selectedCategory].rating
+                    : ""}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
 
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50 text-balance`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+        {/* Livestreams Section */}
+        <section>
+          <h2 className="text-xl mt-8 mb-2">Random Livestreams</h2>
+          <ul>
+            {livestreams.map((stream, index) => (
+              <li key={index} className="mb-4">
+                <div>Name: {stream.name}</div>
+                <div>Headline: {stream.streamer.headline}</div>
+                <div>
+                  {stream.streamer.twitch && (
+                    <a
+                      href={stream.streamer.twitch}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Twitch
+                    </a>
+                  )}
+                  {stream.streamer.youTube && (
+                    <a
+                      href={stream.streamer.youTube}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      YouTube
+                    </a>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      </main>
+
+      {/* Footer */}
+      <footer className="text-center py-4 bg-gray-200 w-full">
+        {/* Footer content */}
+      </footer>
+    </div>
   );
-}
+};
+
+export default Home;
