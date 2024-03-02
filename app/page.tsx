@@ -42,11 +42,29 @@ const Home = () => {
   }, []);
 
   const handleSearch = () => {
-    const filteredPlayers = topPlayersData.filter((player) =>
-      player.username.toLowerCase().includes(searchTerm.toLowerCase())
+    // try {
+    //   handleSearch2();
+    // } catch {
+    const filteredPlayers = topPlayersData.filter(
+      (player) =>
+        player.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        player.id.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
     setSearchResults(filteredPlayers);
+    // }
   };
+
+  async function handleSearch2() {
+    const response = await axios.get(
+      `https://lichess.org/api/user/${searchTerm.toLowerCase()}`
+    );
+    setSearchTerm("");
+
+    console.log(response);
+
+    setSearchResults(response.data);
+  }
 
   async function getLinks(userid: String) {
     try {
@@ -129,6 +147,7 @@ const Home = () => {
                 Search
               </button>
             </div>
+
             <ul>
               {searchResults.map((player, index) => (
                 <li key={index} className="mb-2">
@@ -145,6 +164,12 @@ const Home = () => {
                     {player.perfs[selectedCategory]
                       ? player.perfs[selectedCategory].rating
                       : ""}
+                  </div>
+                  <div>
+                    URL:{" "}
+                    <a
+                      href={`https://lichess.org/@/${player.username}`}
+                    >{`https://lichess.org/@/${player.username}`}</a>
                   </div>
                 </li>
               ))}
@@ -226,38 +251,11 @@ const Home = () => {
                   ? player.perfs[selectedCategory].rating
                   : ""}
               </div>
-
               <div>
-                {getLinks(player.id).then((links) => (
-                  <div>
-                    <div>URL: {links.url}</div>
-                    {links.playing && <div>Playing: {links.playing}</div>}
-                    {links.twitch && (
-                      <div>
-                        Twitch:{" "}
-                        <a
-                          href={links.twitch}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          {links.twitch}
-                        </a>
-                      </div>
-                    )}
-                    {links.youtube && (
-                      <div>
-                        YouTube:{" "}
-                        <a
-                          href={links.youtube}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          {links.youtube}
-                        </a>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                URL:{" "}
+                <a
+                  href={`https://lichess.org/@/${player.username}`}
+                >{`https://lichess.org/@/${player.username}`}</a>
               </div>
             </li>
           ))}
